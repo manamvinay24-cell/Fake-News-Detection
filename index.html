@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173b4f">
+    <meta name="description" content="Analyze news text and images using a machine-learning model.">
+    <title>NewsCheck | Fake News Detection System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+<header class="site-header">
+    <nav class="navbar container">
+        <a class="brand" href="#">
+            <span class="brand-mark">✓</span>
+            <span>NewsCheck</span>
+        </a>
+        <span class="system-status"><span class="status-dot"></span> News analysis</span>
+    </nav>
+</header>
+
+<main class="container page-content">
+    <section class="hero">
+        <p class="eyebrow">NEWS ANALYSIS WORKSPACE</p>
+        <h1>Check the story,<br> not just the headline.</h1>
+        <p class="hero-copy">
+            Analyze news text or upload a news screenshot to extract its text
+            and receive a machine-learning prediction.
+        </p>
+        <div class="hero-note">
+            This tool provides model predictions, not verified fact-checks.
+        </div>
+    </section>
+
+    <section class="card analyzer-card">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">STEP 01</p>
+                <h2>Analyze news</h2>
+                <p class="section-description">Choose text or image.</p>
+            </div>
+            <span class="model-chip">ML MODEL</span>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Content type">
+            <button type="button" class="tab active" role="tab"
+                    aria-selected="true" data-tab="text">Aa Text</button>
+            <button type="button" class="tab" role="tab"
+                    aria-selected="false" data-tab="image">▧ Image</button>
+            <button type="button" class="tab" role="tab"
+                    aria-selected="false" data-tab="video">▷ Video</button>
+        </div>
+
+        <!-- TEXT TAB -->
+        <div class="tab-panel active" id="textPanel" role="tabpanel">
+            <label for="newsText">News article or headline</label>
+            <textarea id="newsText"
+                placeholder="Paste a news article or headline here..."></textarea>
+            <div class="text-info">
+                <span id="charCount">0 characters</span>
+                <span>More context can help the model.</span>
+            </div>
+        </div>
+
+        <!-- IMAGE TAB -->
+        <div class="tab-panel" id="imagePanel" role="tabpanel">
+            <label for="imageInput">News image or screenshot</label>
+
+            <div class="upload-area" id="imageUploadArea" tabindex="0"
+                 role="button" aria-label="Choose or drop an image">
+                <div class="upload-symbol">▧</div>
+                <h3>Choose an image to upload</h3>
+                <p>PNG, JPG, JPEG or WEBP · Maximum 8 MB</p>
+                <button type="button" class="browse-btn"
+                        id="imageBrowseBtn">Browse images</button>
+                <input type="file" id="imageInput"
+                       accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                       hidden>
+                <p class="upload-footnote">Or drag an image into this area.</p>
+            </div>
+
+            <div class="preview-container" id="imagePreviewContainer" hidden>
+                <div class="preview-header">
+                    <strong>Selected image</strong>
+                    <button type="button" class="remove-btn"
+                            id="removeImage">Remove image</button>
+                </div>
+                <img id="imagePreview" class="image-preview"
+                     alt="Preview of selected news image">
+                <div class="file-info" id="imageInfo"></div>
+            </div>
+
+            <div id="imageError" class="inline-error" role="alert" hidden></div>
+
+            <p class="input-tip">
+                The backend uses OCR to extract readable text from the image,
+                then sends that text to the trained ML model.
+            </p>
+        </div>
+
+        <!-- VIDEO TAB -->
+        <div class="tab-panel" id="videoPanel" role="tabpanel">
+            <label for="videoInput">News video</label>
+            <div class="upload-area" id="videoUploadArea" tabindex="0"
+                 role="button" aria-label="Choose a video">
+                <div class="upload-symbol">▷</div>
+                <h3>Choose a video</h3>
+                <p>MP4, WEBM or MOV</p>
+                <button type="button" class="browse-btn"
+                        id="videoBrowseBtn">Browse videos</button>
+                <input type="file" id="videoInput"
+                       accept="video/mp4,video/webm,video/quicktime" hidden>
+                <p class="upload-footnote">Video preview only.</p>
+            </div>
+
+            <div class="preview-container" id="videoPreviewContainer" hidden>
+                <div class="preview-header">
+                    <strong>Selected video</strong>
+                    <button type="button" class="remove-btn"
+                            id="removeVideo">Remove video</button>
+                </div>
+                <video id="videoPreview" class="video-preview" controls></video>
+                <div class="file-info" id="videoInfo"></div>
+            </div>
+            <p class="input-tip">
+                Video transcription and prediction are not implemented yet.
+            </p>
+        </div>
+
+        <div class="action-row">
+            <button type="button" class="analyze-btn" id="analyzeBtn">
+                🔍 Analyze content
+            </button>
+            <button type="button" class="clear-btn" id="clearBtn">
+                Clear inputs
+            </button>
+        </div>
+    </section>
+
+    <section class="loading-card" id="loadingCard" aria-live="polite" hidden>
+        <div class="spinner"></div>
+        <div>
+            <h3>Analyzing content...</h3>
+            <p id="loadingMessage">Please wait.</p>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="card result-card" id="resultCard"
+             aria-labelledby="resultHeading" aria-live="polite" hidden>
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">STEP 02</p>
+                <h2 id="resultHeading">Detection result</h2>
+                <p class="section-description">Review the model output.</p>
+            </div>
+            <span class="result-label">MODEL OUTPUT</span>
+        </div>
+
+        <div class="result-summary">
+            <span class="result-status" id="resultStatus">UNCERTAIN</span>
+            <h3 id="resultTitle">Prediction will appear here</h3>
+            <p id="resultMessage"></p>
+        </div>
+
+        <div class="confidence-box">
+            <div class="confidence-header">
+                <span>Model confidence</span>
+                <strong id="confidenceValue">0%</strong>
+            </div>
+            <div class="progress" role="progressbar"
+                 aria-label="Model confidence"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                 id="confidenceProgress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p class="confidence-note">
+                Model confidence is not proof that a claim is true.
+            </p>
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-box">
+                <span>Content type</span>
+                <strong id="contentType">Text</strong>
+            </div>
+            <div class="detail-box">
+                <span>Analysis source</span>
+                <strong id="sourceResult">Trained ML Model</strong>
+            </div>
+            <div class="detail-box">
+                <span>Processing</span>
+                <strong id="languageResult">Text Classification</strong>
+            </div>
+            <div class="detail-box">
+                <span>Clickbait risk</span>
+                <strong>Not evaluated</strong>
+            </div>
+        </div>
+
+        <div id="extractedTextBox" class="extracted-text-box" hidden>
+            <h3>Text extracted from image (OCR)</h3>
+            <pre id="extractedText"></pre>
+            <button type="button" class="clear-btn" id="copyExtractedText">
+                Copy extracted text
+            </button>
+        </div>
+
+        <p class="result-disclaimer">
+            Verify important claims with multiple reliable sources before
+            sharing or acting on them.
+        </p>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="card history-card">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">SAVED ACTIVITY</p>
+                <h2>Recent checks</h2>
+                <p class="section-description">Latest saved predictions.</p>
+            </div>
+            <button type="button" class="clear-btn" id="clearHistoryBtn">
+                Clear history
+            </button>
+        </div>
+        <div id="historyList">
+            <div class="empty-history">Loading history...</div>
+        </div>
+    </section>
+
+    <section class="about-strip">
+        <div class="about-icon">✓</div>
+        <div>
+            <h2>Use your judgment, too.</h2>
+            <p>
+                Machine-learning models can make mistakes. OCR can also fail
+                to read blurry, rotated or low-quality images.
+            </p>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <span>© 2026 NewsCheck · Fake News Detection System</span>
+        <span>Built for careful reading and responsible sharing.</span>
+    </div>
+</footer>
+</body>
+</html>
